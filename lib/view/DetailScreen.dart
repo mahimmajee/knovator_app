@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../viewModel/PostViewModel.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:knovator_app/bloc/post_bloc.dart';
+import 'package:knovator_app/bloc/post_event.dart';
+import 'package:knovator_app/bloc/post_state.dart';
+import 'package:knovator_app/utils/enum.dart';
 
 class DetailScreen extends StatefulWidget {
   int? postId;
+
   DetailScreen({this.postId, super.key});
 
   @override
@@ -16,31 +19,31 @@ class _DetailScreenState extends State<DetailScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    var provider = Provider.of<PostViewModel>(context, listen: false);
-    provider.readPostFromLocal(widget.postId!);
+    context.read<PostBloc>().add(PostFetched(postId: widget.postId!));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<PostViewModel>(builder: (context, provider, child) {
-      return Scaffold(
-        appBar: AppBar(
-          title: provider.postLoading
+    return BlocBuilder<PostBloc, PostState>(
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: state.postStatus == PostStatus.loading
+                ? const Center(child: CircularProgressIndicator())
+                : Text(state.post == null ? "NA" : state.post!.title!),
+            centerTitle: true,
+            backgroundColor: Colors.lightGreen,
+          ),
+          body: state.postStatus == PostStatus.loading
               ? const Center(child: CircularProgressIndicator())
-              : Text(provider.post == null ? "NA" : provider.post!.title!),
-          centerTitle: true,
-          backgroundColor: Colors.lightGreen,
-        ),
-        body: provider.postLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Center(
-                child: Card(
-                  color: Colors.yellow[100],
-                  child:
-                      Text(provider.post == null ? "NA" : provider.post!.body!),
+              : Center(
+                  child: Card(
+                    color: Colors.yellow[100],
+                    child: Text(state.post == null ? "NA" : state.post!.body!),
+                  ),
                 ),
-              ),
-      );
-    });
+        );
+      },
+    );
   }
 }

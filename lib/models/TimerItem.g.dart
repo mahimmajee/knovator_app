@@ -1,47 +1,35 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'post.dart';
+part of 'TimerItem.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class PostAdapter extends TypeAdapter<Post> {
+class TimerItemAdapter extends TypeAdapter<TimerItem> {
   @override
-  final int typeId = 0;
+  final int typeId = 1;
 
   @override
-  Post read(BinaryReader reader) {
+  TimerItem read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Post(
-      userId: fields[0] as int?,
-      id: fields[1] as int?,
-      title: fields[2] as String?,
-      body: fields[3] as String?,
-      tileColor: fields[4] as int?,
-      timerItem: fields[5] as TimerItem?,
+    return TimerItem(
+      duration: fields[0] as int?,
+      isPaused: fields[1] as bool?,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Post obj) {
+  void write(BinaryWriter writer, TimerItem obj) {
     writer
-      ..writeByte(6)
-      ..writeByte(0)
-      ..write(obj.userId)
-      ..writeByte(1)
-      ..write(obj.id)
       ..writeByte(2)
-      ..write(obj.title)
-      ..writeByte(3)
-      ..write(obj.body)
-      ..writeByte(4)
-      ..write(obj.tileColor)
-      ..writeByte(5)
-      ..write(obj.timerItem);
+      ..writeByte(0)
+      ..write(obj.duration)
+      ..writeByte(1)
+      ..write(obj.isPaused);
   }
 
   @override
@@ -50,7 +38,7 @@ class PostAdapter extends TypeAdapter<Post> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PostAdapter &&
+      other is TimerItemAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

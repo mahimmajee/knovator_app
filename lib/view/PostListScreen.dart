@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:knovator_app/utils/enum.dart';
 import 'package:knovator_app/view/DetailScreen.dart';
-import 'package:knovator_app/viewModel/PostViewModel.dart';
-import 'package:provider/provider.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import '../bloc/post_bloc.dart';
+import '../bloc/post_event.dart';
+import '../bloc/post_state.dart';
 
 class PostListScreen extends StatefulWidget {
   const PostListScreen({super.key});
@@ -16,9 +19,7 @@ class _PostListScreenState extends State<PostListScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    var provider = Provider.of<PostViewModel>(context, listen: false);
-    provider.initialClear();
-    provider.readPostsFromLocal();
+    context.read<PostBloc>().add(PostsFetched());
   }
 
   @override
@@ -29,72 +30,79 @@ class _PostListScreenState extends State<PostListScreen> {
         centerTitle: true,
         backgroundColor: Colors.lightGreen,
       ),
-      body: Consumer<PostViewModel>(builder: (context, provider, child) {
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            provider.postListLoading
-                ? const Center(child: CircularProgressIndicator())
-                : provider.postList.isEmpty
-                    ? const Center(
-                        child: Text('No Posts Available'),
-                      )
-                    : Expanded(
-                        child: ListView.builder(
-                          itemCount: provider.postList.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 2.0),
-                              child: VisibilityDetector(
-                                key: Key('item-$index'),
-                                onVisibilityChanged: (visibilityInfo) {
-                                  final isVisible =
-                                      visibilityInfo.visibleFraction > 0;
-                                  provider.toggleTimer(index, isVisible);
-                                },
-                                child: ListTile(
-                                  title: Text(provider.postList[index].title ??
-                                      'No Title'),
-                                  tileColor: provider.tileColor[index],
-                                  onTap: () {
-                                    provider.changeTileColor(index);
-                                    provider.toggleTimer(index, true);
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => DetailScreen(
-                                            postId:
-                                                provider.postList[index].id),
-                                      ),
-                                    );
+      body: BlocBuilder<PostBloc, PostState>(
+        builder: (context, state) {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              state.postListStatus == PostStatus.loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : state.postList.isEmpty
+                      ? const Center(
+                          child: Text('No Posts Available'),
+                        )
+                      : Expanded(
+                          child: ListView.builder(
+                            itemCount: state.postList.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 2.0),
+                                child: VisibilityDetector(
+                                  key: Key('item-$index'),
+                                  onVisibilityChanged: (visibilityInfo) {
+                                    final isVisible =
+                                        visibilityInfo.visibleFraction > 0;
+                                    context.read<PostBloc>().add(ToggleTimer(
+                                        index: index, isVisible: isVisible));
                                   },
-                                  trailing: Column(
-                                    children: [
-                                      const Icon(Icons.timer,
-                                          color: Colors.orange),
-                                      const SizedBox(
-                                        height: 2,
-                                      ),
-                                      Text(
-                                        provider.timerItems[index].duration
-                                            .toString(),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
+                                  child: ListTile(
+                                    title: Text(state.postList[index].title ??
+                                        'No Title'),
+                                    tileColor:
+                                        Color(state.postList[index].tileColor!),
+                                    onTap: () {
+                                      context
+                                          .read<PostBloc>()
+                                          .add(ChangeTileColor(index: index));
+                                      context.read<PostBloc>().add(ToggleTimer(
+                                          index: index, isVisible: true));
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => DetailScreen(
+                                              postId: state.postList[index].id),
                                         ),
-                                      ),
-                                    ],
+                                      );
+                                    },
+                                    trailing: Column(
+                                      children: [
+                                        const Icon(Icons.timer,
+                                            color: Colors.orange),
+                                        const SizedBox(
+                                          height: 2,
+                                        ),
+                                        Text(
+                                          state.postList[index].timerItem!
+                                              .duration!
+                                              .toString(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
-                      ),
-          ],
-        );
-      }),
+            ],
+          );
+        },
+      ),
     );
   }
 }
